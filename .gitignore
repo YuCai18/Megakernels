@@ -9,3 +9,14 @@ __pycache__/
 *.ptx
 *.cubin
 *.fatbin
+
+# macOS resource fork files
+._*
+
+# Docker and build
+docker/
+build.sh
+
+# Benchmark scripts and results
+benchmark_qwen2*.py
+benchmark_results*.json

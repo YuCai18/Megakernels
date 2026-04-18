@@ -245,6 +245,25 @@ constexpr int TEVENT_TRIPLES_END = 110;
 constexpr int TEVENT_TRIPLES_STORE_START = 124;
 constexpr int TEVENT_TRIPLES_OUTPUT_READY = 125;
 
+// Global memory barrier: spin-wait on an atomic counter with nanosleep.
+// Used for cross-SM producer-consumer synchronization between different
+// megakernel SMs working on the same layer.
+template<typename Config, typename Globals>
+__device__ __forceinline__ void gmem_barrier_wait(
+    const Globals &g, int layer, int opcode, int head, int expected)
+{
+    while (*(volatile int *)&g.Bar[{layer, opcode, head}] < expected) {
+        __nanosleep(Config::GMEM_SPIN_LOOP_SLEEP_NANOS);
+    }
+}
+
+template<typename Globals>
+__device__ __forceinline__ void gmem_barrier_signal(
+    const Globals &g, int layer, int opcode, int head, int count = 1)
+{
+    atomicAdd(&g.Bar[{layer, opcode, head}], count);
+}
+
 } // namespace megakernel
 
 #ifdef MK_DEBUG
